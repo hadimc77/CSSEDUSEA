@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Untitled</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .hidden {
+      display: none;
+    }
+    .question-transition {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .modal-glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Quiz Box -->
+  <div class="w-full max-w-xl p-6 rounded-2xl glass text-white shadow-2xl space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-bold">🔥 Quiz Time</h2>
+      <div id="lives" class="text-red-500 text-xl">❤️❤️❤️</div>
+    </div>
+
+    <!-- Question -->
+    <div id="question-container" class="question-transition">
+      <p id="question" class="text-lg">Loading question...</p>
+    </div>
+
+    <!-- Options -->
+    <div id="options" class="grid gap-4">
+      <button onclick="checkAnswer('A')" class="glass px-4 py-2 rounded-xl hover:bg-white hover:text-black transition">Option A</button>
+      <button onclick="checkAnswer('B')" class="glass px-4 py-2 rounded-xl hover:bg-white hover:text-black transition">Option B</button>
+      <button onclick="checkAnswer('C')" class="glass px-4 py-2 rounded-xl hover:bg-white hover:text-black transition">Option C</button>
+      <button onclick="checkAnswer('D')" class="glass px-4 py-2 rounded-xl hover:bg-white hover:text-black transition">Option D</button>
+    </div>
+
+    <!-- Score and Next button -->
+    <div class="flex justify-between items-center pt-4 border-t border-white/20">
+      <div class="text-sm">Score: <span id="score">0</span></div>
+      <button onclick="nextQuestion()" id="next-btn" class="glass px-4 py-2 rounded-full hover:bg-white hover:text-black transition hidden">Next ➡️</button>
+    </div>
+  </div>
+
+  <!-- Modal (fake ad reward) -->
+  <div id="ad-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+    <div class="modal-glass text-white p-6 rounded-xl shadow-2xl w-[90%] max-w-md text-center">
+      <h2 class="text-xl font-semibold mb-4">😢 You're Out of Lives</h2>
+      <p class="mb-6">Watch an ad to continue the game with 1 extra life?</p>
+      <div class="flex justify-center gap-4">
+        <button onclick="watchAd()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Watch Ad</button>
+        <button onclick="endGame()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Quit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let lives = 3;
+    let score = 0;
+    let currentQuestionIndex = 0;
+
+    const questions = [
+      {
+        question: "ഇസ്ലാമിൽ ആദ്യം വന്ന പ്രവാചകന് ആരാണ്?",
+        options: ["ആദം (അലൈ)", "നൂഹ് (അലൈ)", "ഇബ്രാഹിം (അലൈ)", "ഈസ (അലൈ)"],
+        correctAnswer: "A"
+      },
+      {
+        question: "ഖുറാനിൽ പരാമർശിച്ചിരിക്കുന്ന പ്രവാചകരുടെ എണ്ണം എത്ര?",
+        options: ["25", "124,000", "99", "313"],
+        correctAnswer: "A"
+      },
+      {
+        question: "ഇസ്ലാമിലെ അവസാന പ്രവാചകൻ ആരാണ്?",
+        options: ["ഈസ (അലൈ)", "മൂഹമ്മദ (സ.അ.)", "ദാവൂദ് (അലൈ)", "സൂലൈമാൻ (അലൈ)"],
+        correctAnswer: "B"
+      },
+      {
+        question: "ഖുറാനിൽ ആദ്യ വന്ന സൂറത് ഏത്?",
+        options: ["സൂറത്ത് അൽ അലഖ്", "സൂറത്തുൽ ബഖറ", "സൂറത്തുൽ ഫാത്തിഹ", "സൂറത്തുൽ ഇഖ്‌ലാസ്"],
+        correctAnswer: "A"
+      }
+    ];
+
+    function showQuestion(index) {
+      const q = questions[index];
+      document.getElementById('question').textContent = q.question;
+      const buttons = document.getElementById('options').children;
+      for (let i = 0; i < 4; i++) {
+        buttons[i].textContent = q.options[i];
+      }
+      document.getElementById('next-btn').classList.add('hidden');
+    }
+
+    function checkAnswer(optionKey) {
+      const correct = questions[currentQuestionIndex].correctAnswer;
+      if (optionKey === correct) {
+        score++;
+        document.getElementById('score').textContent = score;
+        alert("✅ Correct!");
+      } else {
+        lives--;
+        document.getElementById('lives').textContent = '❤️'.repeat(lives);
+        alert("❌ Wrong!");
+        if (lives <= 0) {
+          document.getElementById('ad-modal').classList.remove('hidden');
+          return;
+        }
+      }
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion(currentQuestionIndex);
+      } else {
+        alert("🎉 Quiz Complete! Your score: " + score);
+        location.reload();
+      }
+    }
+
+    function watchAd() {
+      document.getElementById('ad-modal').classList.add('hidden');
+      setTimeout(() => {
+        alert("🎬 Thanks for watching the ad! Life restored.");
+        lives = 1;
+        document.getElementById('lives').textContent = '❤️';
+      }, 2000); // Fake 2 sec ad
+    }
+
+    function endGame() {
+      alert("Game Over. Better luck next time!");
+      location.reload();
+    }
+
+    // Init first question
+    showQuestion(currentQuestionIndex);
+  </script>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
